@@ -1,6 +1,31 @@
 const { useQuasar } = Quasar
 const { ref } = Vue
 
+function gmPost(action, data) {
+    const payload = JSON.stringify({action: action, data: data});
+    if (typeof gmod !== "undefined" && gmod.call) {
+        gmod.call("InventoryMessage", payload);
+    } else {
+        console.log(payload);
+    }
+}
+
+const originalPost = $.post;
+$.post = function(url, data, cb) {
+    if (url.startsWith("https://qb-inventory/")) {
+        const action = url.replace("https://qb-inventory/", "");
+        let obj = data;
+        if (typeof data === "string") {
+            try { obj = JSON.parse(data); } catch (e) {}
+        }
+        gmPost(action, obj);
+        if (cb) cb({});
+    } else {
+        originalPost(url, data, cb);
+    }
+};
+
+
 const app = Vue.createApp({
     setup() {
         return {
